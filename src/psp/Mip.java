@@ -4,7 +4,7 @@ import ilog.concert.*;
 import ilog.cplex.IloCplex;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.List;import javax.swing.plaf.synth.SynthScrollBarUI;
 
 public class Mip {
     private Instance instance;
@@ -13,10 +13,12 @@ public class Mip {
     private boolean coutChangement = true;
     private boolean refroidissement = true;
     private boolean regulation = false;
-    private List<List<IloIntVar>> isTurbine;
-    private List<List<IloIntVar>> isPompe;
-    private List<List<IloNumVar>> puissanceTurbine;
-    private List<List<IloNumVar>> puissancePompe;
+    
+    //Variable du PLNE
+    private IloIntVar[][] isTurbine;
+    private IloIntVar[][] isPompe;
+    private IloNumVar[][] puissanceTurbine;
+    private IloNumVar[][] puissancePompe;
 
     /**
      * Constructeur d'un MIP pour r�soudre l'instance
@@ -30,7 +32,17 @@ public class Mip {
      * Fonction résolvant l'instance.
      */
     public void solve() throws IloException {
-        model.solve();
+        if(model.solve()){
+        	  for (int i = 0; i < instance.getTPs().length; i++) {
+                  for (int j = 0; j <instance.getCout().length; j++) {
+					System.out.println("isPome"+(i+1)+"_"+(j+1)+" = " +model.getValue(this.isPompe[i][j]));
+					System.out.println("isTurbine"+(i+1)+"_"+(j+1)+" = " +model.getValue(this.isTurbine[i][j]));
+				}
+				
+			}
+		}else{
+		 System.out.println("elseeeeeeee");
+		}
     }
 
     /**
@@ -62,25 +74,17 @@ public class Mip {
      * Function initialisant les variables
      */
     private void initVariables() throws IloException {
-        this.isTurbine = new ArrayList<>();
-        this.isPompe = new ArrayList<>();
-        this.puissanceTurbine = new ArrayList<>();
-        this.puissancePompe = new ArrayList<>();
-        List<IloIntVar> turbineInTime = new ArrayList<>();
-        List<IloIntVar> pompeInTime = new ArrayList<>();
-        List<IloNumVar> puissanceTurbineInTime = new ArrayList<>();
-        List<IloNumVar> puissancePompeInTime = new ArrayList<>();
+        this.isTurbine = new IloIntVar[instance.getTPs().length][instance.getCout().length];
+        this.isPompe = new IloIntVar[instance.getTPs().length][instance.getCout().length];
+        this.puissanceTurbine = new IloNumVar[instance.getTPs().length][instance.getCout().length];
+        this.puissancePompe = new IloNumVar[instance.getTPs().length][instance.getCout().length];
         for (int i = 0; i < instance.getTPs().length; i++) {
             for (int j = 0; j <instance.getCout().length; j++) {
-                turbineInTime.add(model.boolVar("isTurbine"+i+""+j));
-                pompeInTime.add(model.boolVar("isPompe"+i+""+j));
-                puissanceTurbineInTime.add(model.numVar(0.0, Double.MAX_VALUE, "puissanceTurbine"+i+""+j));
-                puissancePompeInTime.add(model.numVar(0.0, Double.MAX_VALUE, "puissancePompe"+i+""+j));
+            	this.isTurbine[i][j] = model.boolVar("isTurbine"+i+"_"+j);
+            	 this.isPompe[i][j] =  model.boolVar("isPompe"+i+"_"+j);
+            	 this.puissanceTurbine[i][j] = model.numVar(0.0, Double.MAX_VALUE, "puissanceTurbine"+i+"_"+j);
+            	 this.puissancePompe[i][j] = model.numVar(0.0, Double.MAX_VALUE, "puissancePompe"+i+"_"+j);
             }
-            this.isTurbine.add(turbineInTime);
-            this.isPompe.add(pompeInTime);
-            this.puissanceTurbine.add(puissanceTurbineInTime);
-            this.puissancePompe.add(puissancePompeInTime);
         }
     }
 
@@ -105,15 +109,10 @@ public class Mip {
 
         TurbinePompe[] tPs = instance.getTPs();
         for (int i = 0; i < tPs.length; i++) {
-            // Contrainte 1
-            List<IloIntVar> turbine = isTurbine.get(i);
-            List<IloIntVar> pompe = isPompe.get(i);
             for (int j = 0; j < instance.getCout().length; j++) {
-                List<IloNumVar> puissanceTurbine = this.puissanceTurbine.get(i);
-                List<IloNumVar> puissancePompe = this.puissancePompe.get(i);
-                contraintePuissance(turbine.get(j), puissanceTurbine.get(j),i,j);
-                contraintePuissance(pompe.get(j), puissancePompe.get(j),i,j);
-                IloIntExpr contrainteActivationPompeTurbine = model.sum(pompe.get(j), turbine.get(j));
+                contraintePuissanceTurbine(this.isTurbine[i][j], puissanceTurbine[i][j],i,j);
+                contraintePuissancePompe(this.isPompe[i][j], puissancePompe[i][j],i,j);
+                IloIntExpr contrainteActivationPompeTurbine = model.sum(this.isPompe[i][j], this.isTurbine[i][j]);
                 model.addLe(contrainteActivationPompeTurbine, 1);
             }
 
@@ -121,11 +120,17 @@ public class Mip {
 
     }
 
-    private void contraintePuissance(IloIntVar turbinePompe, IloNumVar puissance, int i, int j) throws IloException {
+    private void contraintePuissanceTurbine(IloIntVar turbinePompe, IloNumVar puissance, int i, int j) throws IloException {
         IloNumExpr expr1 = model.prod(turbinePompe, instance.getTPs()[i].getP_T_min());
-        IloNumExpr expr3 = model.le(expr1, puissance);
+        model.addLe(expr1, puissance);
         IloNumExpr expr2 = model.prod(turbinePompe, instance.getTPs()[i].getP_T_max());
-        model.addLe(expr3, expr2, "contraintePuissance1TurbinePompe" + i +"_"+j);
+        model.addLe(puissance, expr2, "contraintePuissance1TurbinePompe" + i +"_"+j);
+    }
+    private void contraintePuissancePompe(IloIntVar turbinePompe, IloNumVar puissance, int i, int j) throws IloException {
+        IloNumExpr expr1 = model.prod(turbinePompe, instance.getTPs()[i].getP_P_max());
+        model.addLe(expr1, puissance);
+        IloNumExpr expr2 = model.prod(turbinePompe, instance.getTPs()[i].getP_P_min());
+        model.addLe(puissance, expr2, "contraintePuissance1Pompe" + i +"_"+j);
     }
 
 
@@ -174,12 +179,13 @@ public class Mip {
         IloNumExpr coupTotal = model.intExpr();
         for (int i = 0; i < instance.getTPs().length; i++) {
             for (int j = 0; j < cout.length; j++) {
-                IloNumExpr coupTurbineActiver =  model.prod(isTurbine.get(i).get(j), cout[i], puissanceTurbine.get(i).get(j));
-                IloNumExpr coupPompeActiver = model.prod(isPompe.get(i).get(j), cout[i], puissancePompe.get(i).get(j));
+                IloNumExpr coupTurbineActiver =  model.prod(isTurbine[i][j], cout[i], puissanceTurbine[i][j]);
+                IloNumExpr coupPompeActiver = model.prod(isPompe[i][j], cout[i], puissancePompe[i][j]);
                 coupTotal = model.sum(coupTurbineActiver, coupPompeActiver);
+                sum = model.sum(sum,coupTotal);
             }
-            sum = model.sum(sum,coupTotal);
         }
+        model.addMaximize(sum, "coutTotal");
 
 
     }
