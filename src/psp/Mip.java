@@ -1,6 +1,9 @@
 package psp;
 
 import ilog.concert.IloException;
+import ilog.concert.IloIntVar;
+import ilog.concert.IloNumExpr;
+import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
 public class Mip {
@@ -10,9 +13,13 @@ public class Mip {
 	private boolean coutChangement = true;
 	private boolean refroidissement = true;
 	private boolean regulation = false;
+	private IloIntVar isTurbine;
+	private IloIntVar isPompe;
+	private IloNumVar puissanceTurbine;
+	private IloNumVar puissancePompe;
 	
 	/**
-	 * Constructeur d'un MIP pour résoudre l'instance
+	 * Constructeur d'un MIP pour rï¿½soudre l'instance
 	 */
 	public Mip(Instance instance) throws IloException {
 		this.instance = instance;
@@ -20,7 +27,7 @@ public class Mip {
 	}
 
 	/**
-	 * Fonction résolvant l'instance.
+	 * Fonction rÃ©solvant l'instance.
 	 */
 	public void solve() throws IloException {
 		model.solve();
@@ -28,7 +35,7 @@ public class Mip {
 
 	/**
 	 * Fonction retournant la valeur de l'objectif.
-	 * Requiert qu'une solution ait été trouvée
+	 * Requiert qu'une solution ait ï¿½tï¿½ trouvï¿½e
 	 */
 	public double getObjValue() throws IloException {
 		return model.getObjValue();
@@ -55,9 +62,10 @@ public class Mip {
 	 * Function initialisant les variables
 	 */
 	private void initVariables() throws IloException {
-		// TODO à vous de jouer
-		System.out.println("Variables non implementees");
-		System.exit(1);
+		isTurbine = model.boolVar("isTurbine");
+		isPompe = model.boolVar("isPompe");
+		puissanceTurbine = model.numVar(0.0, Double.MAX_VALUE, "puissanceTurbine");
+		puissancePompe = model.numVar(0.0, Double.MAX_VALUE, "puissancePompe");
 	}
 	
 	/**
@@ -78,16 +86,20 @@ public class Mip {
 	 * Fonction initialisant les contraintes de puissances des turbines pompes
 	 */
 	private void initConstraintesPuissance() throws IloException {
-		// TODO à vous de jouer
-		System.out.println("Contraintes de puissance non implementees");
-		System.exit(1);
+		// Contrainte 1
+		TurbinePompe[] tPs = instance.getTPs();
+		for (int i = 0; i < tPs.length; i++) {
+			IloNumExpr expr1 = model.prod(isTurbine,tPs[i].getP_T_min());
+			//IloNumExpr expr2 = model.le(expr1,tPs[i].)
+			model.addLe(expr1, 150000.0, "ctr_1");
+		}
 	}
 	
 	/**
 	 * Function initialisant les contraintes de reservoirs
 	 */
 	private void initContraintesReservoir() throws IloException {
-		// TODO à vous de jouer
+		// TODO ï¿½ vous de jouer
 		System.out.println("Contraintes de reservoir non implementees");
 		System.exit(1);
 	}
@@ -96,7 +108,7 @@ public class Mip {
 	 * Fonction initialisant les couts de changement de fonctionnement
 	 */
 	private void initCoutChangementFonction() throws IloException {
-		// TODO à vous de jouer
+		// TODO ï¿½ vous de jouer
 		System.out.println("Couts de changement de fonctionnement non implementees");
 		System.exit(1);
 	}
@@ -105,7 +117,7 @@ public class Mip {
 	 * Fonction initialisant les contraintes de refroidissement
 	 */
 	private void initConstraintsRefroidissmenet() throws IloException {
-		// TODO à vous de jouer
+		// TODO ï¿½ vous de jouer
 		System.out.println("Contraintes de refroidissement non implementees");
 		System.exit(1);
 	}
@@ -114,7 +126,7 @@ public class Mip {
 	 * Fonction initialisant les contraintes liees a la regulation
 	 */
 	private void initContraintesRegulation() throws IloException {
-		// TODO à vous de jouer
+		// TODO ï¿½ vous de jouer
 		System.out.println("Regulation non implementee");
 		System.exit(1);
 	}
@@ -123,7 +135,7 @@ public class Mip {
 	 * Fonction initialisant la fonction objectif 
 	 */
 	private void initObjective() throws IloException {
-		// TODO à vous de jouer
+		// TODO ï¿½ vous de jouer
 		System.out.println("Objectif non implemente");
 		System.exit(1);
 	}
