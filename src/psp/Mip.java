@@ -93,7 +93,7 @@ public class Mip {
      */
     private void initConstraints() throws IloException {
         initConstraintesPuissance();
-//        initContraintesReservoir();
+        initContraintesReservoir();
 //        if (coutChangement)
 //            initCoutChangementFonction();
 //        if (refroidissement)
