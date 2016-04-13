@@ -1,7 +1,11 @@
 package psp;
 
+import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.util.ArrayList;
+
+import org.junit.Assert;
 
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
@@ -76,6 +80,7 @@ public class Mip {
      */
     private void initModel() throws IloException {
         model = new IloCplex();
+        //Objective();
         initVariables();
         initConstraints();
         initObjective();
@@ -143,7 +148,7 @@ public class Mip {
      * Function initialisant les contraintes de reservoirs
      */
     private void initContraintesReservoir() throws IloException {
-        for(int turbineCourante=0; turbineCourante<instance.getTPs().length-1; turbineCourante++) {
+        for(int turbineCourante=0; turbineCourante<instance.getTPs().length; turbineCourante++) {
             model.addEq(hauteurChute[turbineCourante][0], instance.getSup().getH_0() - instance.getInf().getH_0() + instance.getDelta_H());
             for (int heureCourante = 0; heureCourante < instance.getCout().length - 1; heureCourante++) {
                 Double coef = 2 * 3600 / (instance.getInf().getLargeur() * instance.getInf().getLongueur());
