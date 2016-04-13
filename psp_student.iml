@@ -15,18 +15,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module-library">
-      <library name="cplex.jar">
-        <CLASSES>
-          <root url="file://libs/cplex/cplex.jar" />
-        </CLASSES>
-        <JAVADOC />
-        <NATIVE>
-          <root url="file://C:/Users/guepetj/Documents/git/psp_student/libs/cplex" />
-        </NATIVE>
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="junit4">
         <CLASSES>
           <root url="jar://$APPLICATION_HOME_DIR$/lib/junit-4.12.jar!/" />
@@ -35,6 +23,14 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="cplex" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://C:/Program Files/IBM/ILOG/CPLEX_Studio_Community1263/cplex/lib/cplex.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
