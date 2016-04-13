@@ -1,10 +1,13 @@
 package psp;
 
-import ilog.concert.*;
-import ilog.cplex.IloCplex;
 
-import java.util.ArrayList;
-import java.util.List;import javax.swing.plaf.synth.SynthScrollBarUI;
+import java.io.File;
+
+import ilog.concert.IloException;
+import ilog.concert.IloIntVar;
+import ilog.concert.IloNumExpr;
+import ilog.concert.IloNumVar;
+import ilog.cplex.IloCplex;
 
 public class Mip {
     private Instance instance;
@@ -13,15 +16,17 @@ public class Mip {
     private boolean coutChangement = true;
     private boolean refroidissement = true;
     private boolean regulation = false;
-    
-    //Variable du PLNE
-    private IloIntVar[][] isTurbine;
-    private IloIntVar[][] isPompe;
+
+    private IloIntVar[][] modeTurbine;
+    private IloIntVar[][] modePompe;
+
     private IloNumVar[][] puissanceTurbine;
     private IloNumVar[][] puissancePompe;
 
+    private IloNumVar[][] hauteurChute;
+
     /**
-     * Constructeur d'un MIP pour r�soudre l'instance
+     * Constructeur d'un MIP pour résoudre l'instance
      */
     public Mip(Instance instance) throws IloException {
         this.instance = instance;
@@ -33,21 +38,27 @@ public class Mip {
      */
     public void solve() throws IloException {
         if(model.solve()){
-        	  for (int i = 0; i < instance.getTPs().length; i++) {
-                  for (int j = 0; j <instance.getCout().length; j++) {
-					System.out.println("isPome"+(i+1)+"_"+(j+1)+" = " +model.getValue(this.isPompe[i][j]));
-					System.out.println("isTurbine"+(i+1)+"_"+(j+1)+" = " +model.getValue(this.isTurbine[i][j]));
-				}
-				
-			}
-		}else{
-		 System.out.println("elseeeeeeee");
-		}
+            System.out.println("Solution status = " + model.getStatus());
+            System.out.println("Objective value : " + model.getObjValue());
+
+            for(int turbineCourante = 0; turbineCourante< instance.getTPs().length; turbineCourante++) {
+                System.out.println("Machine numéro = : " + turbineCourante + "");
+                for (int heureCourante = 0; heureCourante < instance.getCout().length; heureCourante++) {
+                    if (model.getValue(modePompe[turbineCourante][heureCourante]) == 1.0) {
+                        System.out.println(" - ModePompe");
+                    } else if (model.getValue(modeTurbine[turbineCourante][heureCourante]) == 1.0) {
+                        System.out.println(" - ModeTurbine");
+                    } else {
+                        System.out.println(" - ModeArret");
+                    }
+                }
+            }
+        }
     }
 
     /**
      * Fonction retournant la valeur de l'objectif.
-     * Requiert qu'une solution ait �t� trouv�e
+     * Requiert qu'une solution ait été trouvée
      */
     public double getObjValue() throws IloException {
         return model.getObjValue();
@@ -70,22 +81,29 @@ public class Mip {
         initObjective();
     }
 
+    private void Objective() throws IloException{
+
+    }
+
     /**
      * Function initialisant les variables
      */
     private void initVariables() throws IloException {
-        this.isTurbine = new IloIntVar[instance.getTPs().length][instance.getCout().length];
-        this.isPompe = new IloIntVar[instance.getTPs().length][instance.getCout().length];
-        this.puissanceTurbine = new IloNumVar[instance.getTPs().length][instance.getCout().length];
-        this.puissancePompe = new IloNumVar[instance.getTPs().length][instance.getCout().length];
-        for (int i = 0; i < instance.getTPs().length; i++) {
-            for (int j = 0; j <instance.getCout().length; j++) {
-            	this.isTurbine[i][j] = model.boolVar("isTurbine"+i+"_"+j);
-            	 this.isPompe[i][j] =  model.boolVar("isPompe"+i+"_"+j);
-            	 this.puissanceTurbine[i][j] = model.numVar(0.0, Double.MAX_VALUE, "puissanceTurbine"+i+"_"+j);
-            	 this.puissancePompe[i][j] = model.numVar(0.0, Double.MAX_VALUE, "puissancePompe"+i+"_"+j);
+        modeTurbine = new IloIntVar[instance.getTPs().length][instance.getCout().length];
+        modePompe = new IloIntVar[instance.getTPs().length][instance.getCout().length];
+        puissanceTurbine = new IloNumVar[instance.getTPs().length][instance.getCout().length];
+        puissancePompe = new IloNumVar[instance.getTPs().length][instance.getCout().length];
+        hauteurChute = new IloNumVar[instance.getTPs().length][instance.getCout().length];
+        for(int i = 0; i< instance.getTPs().length; i++) {
+            for (int j = 0; j < instance.getCout().length; j++) {
+                modeTurbine[i][j] = model.boolVar("modeTurbine"+i+"_"+j);
+                modePompe[i][j] = model.boolVar("modePompe"+i+"_"+j);
+                puissanceTurbine[i][j] = model.numVar(0, Double.MAX_VALUE,"puissanceTurbine"+i+"_"+j);
+                puissancePompe[i][j] = model.numVar(-Double.MAX_VALUE, 0,"puissancePompe"+i+"_"+j);
+                hauteurChute[i][j] = model.numVar(-instance.getInf().getHauteur() + instance.getDelta_H(), instance.getSup().getHauteur() + instance.getDelta_H(),"hauteurChute"+i+"_"+j);
             }
         }
+
     }
 
     /**
@@ -94,99 +112,88 @@ public class Mip {
     private void initConstraints() throws IloException {
         initConstraintesPuissance();
         initContraintesReservoir();
-//        if (coutChangement)
-//            initCoutChangementFonction();
-//        if (refroidissement)
-//            initConstraintsRefroidissmenet();
-//        if (regulation)
-//            initContraintesRegulation();
+        if (coutChangement)
+            initCoutChangementFonction();
+        if (refroidissement)
+            initConstraintsRefroidissmenet();
+        if (regulation)
+            initContraintesRegulation();
     }
 
     /**
      * Fonction initialisant les contraintes de puissances des turbines pompes
      */
     private void initConstraintesPuissance() throws IloException {
-
-        TurbinePompe[] tPs = instance.getTPs();
-        for (int i = 0; i < tPs.length; i++) {
-            for (int j = 0; j < instance.getCout().length; j++) {
-                contraintePuissanceTurbine(this.isTurbine[i][j], puissanceTurbine[i][j],i,j);
-                contraintePuissancePompe(this.isPompe[i][j], puissancePompe[i][j],i,j);
-                IloIntExpr contrainteActivationPompeTurbine = model.sum(this.isPompe[i][j], this.isTurbine[i][j]);
-                model.addLe(contrainteActivationPompeTurbine, 1);
+        for(int turbineCourante = 0; turbineCourante< instance.getTPs().length; turbineCourante++) {
+            for (int heureCourante = 0; heureCourante < instance.getCout().length; heureCourante++) {
+                model.addLe(model.sum(modePompe[turbineCourante][heureCourante], modeTurbine[turbineCourante][heureCourante]), 1,"contrainteMode"+turbineCourante+"_" + heureCourante);
+                model.addLe(puissanceTurbine[turbineCourante][heureCourante], model.prod(modeTurbine[turbineCourante][heureCourante], instance.getTPs()[0].getP_T_max()),
+                        "contraintePuissanceTurbine"+turbineCourante+"_" + heureCourante);
+                model.addGe(puissanceTurbine[turbineCourante][heureCourante], model.prod(modeTurbine[turbineCourante][heureCourante], instance.getTPs()[0].getP_T_min()),
+                        "contraintePuissanceTurbine"+turbineCourante+"_" + heureCourante);
+                model.addLe(puissancePompe[turbineCourante][heureCourante], model.prod(modePompe[turbineCourante][heureCourante], instance.getTPs()[0].getP_P_min()),
+                        "contraintePuissancePompe"+turbineCourante+"_" + heureCourante);
+                model.addGe(puissancePompe[turbineCourante][heureCourante], model.prod(modePompe[turbineCourante][heureCourante], instance.getTPs()[0].getP_P_max()),
+                        "contraintePuissancePompe"+turbineCourante+"_" + heureCourante);
             }
-
         }
-
     }
-
-    private void contraintePuissanceTurbine(IloIntVar turbinePompe, IloNumVar puissance, int i, int j) throws IloException {
-        IloNumExpr expr1 = model.prod(turbinePompe, instance.getTPs()[i].getP_T_min());
-        model.addLe(expr1, puissance);
-        IloNumExpr expr2 = model.prod(turbinePompe, instance.getTPs()[i].getP_T_max());
-        model.addLe(puissance, expr2, "contraintePuissance1TurbinePompe" + i +"_"+j);
-    }
-    private void contraintePuissancePompe(IloIntVar turbinePompe, IloNumVar puissance, int i, int j) throws IloException {
-        IloNumExpr expr1 = model.prod(turbinePompe, instance.getTPs()[i].getP_P_max());
-        model.addLe(expr1, puissance);
-        IloNumExpr expr2 = model.prod(turbinePompe, instance.getTPs()[i].getP_P_min());
-        model.addLe(puissance, expr2, "contraintePuissance1Pompe" + i +"_"+j);
-    }
-
 
     /**
      * Function initialisant les contraintes de reservoirs
      */
     private void initContraintesReservoir() throws IloException {
-        // TODO � vous de jouer
-		System.out.println("Contraintes de reservoir non implementees");
-		System.exit(1);
+        for(int turbineCourante=0; turbineCourante<instance.getTPs().length-1; turbineCourante++) {
+            model.addEq(hauteurChute[turbineCourante][0], instance.getSup().getH_0() - instance.getInf().getH_0() + instance.getDelta_H());
+            for (int heureCourante = 0; heureCourante < instance.getCout().length - 1; heureCourante++) {
+                Double coef = 2 * 3600 / (instance.getInf().getLargeur() * instance.getInf().getLongueur());
+                IloNumExpr expr = model.prod(puissancePompe[turbineCourante][heureCourante], coef / instance.getTPs()[0].getAlpha_P());
+                expr = model.sum(expr, model.prod(puissanceTurbine[turbineCourante][heureCourante], coef / instance.getTPs()[0].getAlpha_T()));
+
+                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante], hauteurChute[turbineCourante][heureCourante + 1]), expr);
+            }
+        }
     }
 
     /**
      * Fonction initialisant les couts de changement de fonctionnement
      */
     private void initCoutChangementFonction() throws IloException {
-        // TODO � vous de jouer
+        // TODO à vous de jouer
         System.out.println("Couts de changement de fonctionnement non implementees");
-        System.exit(1);
     }
 
     /**
      * Fonction initialisant les contraintes de refroidissement
      */
     private void initConstraintsRefroidissmenet() throws IloException {
-		// TODO � vous de jouer
-		System.out.println("Contraintes de refroidissement non implementees");
-		System.exit(1);
+        // TODO à vous de jouer
+        System.out.println("Contraintes de refroidissement non implementees");
     }
 
     /**
      * Fonction initialisant les contraintes liees a la regulation
      */
     private void initContraintesRegulation() throws IloException {
-        // TODO � vous de jouer
-		System.out.println("Regulation non implementee");
-		System.exit(1);
+        // TODO à vous de jouer
+        System.out.println("Regulation non implementee");
     }
 
     /**
      * Fonction initialisant la fonction objectif
      */
     private void initObjective() throws IloException {
-        double[] cout = instance.getCout();
-        IloNumExpr sum = model.intExpr();
-        IloNumExpr coupTotal = model.intExpr();
-        for (int i = 0; i < instance.getTPs().length; i++) {
-            for (int j = 0; j < cout.length; j++) {
-                IloNumExpr coupTurbineActiver =  model.prod(isTurbine[i][j], cout[i], puissanceTurbine[i][j]);
-                IloNumExpr coupPompeActiver = model.prod(isPompe[i][j], cout[i], puissancePompe[i][j]);
-                coupTotal = model.sum(coupTurbineActiver, coupPompeActiver);
-                sum = model.sum(sum,coupTotal);
+
+        IloNumExpr obj = model.intExpr();
+
+        for(int turbineCourante=0; turbineCourante<instance.getTPs().length; turbineCourante++){
+            for(int heureCourante=0; heureCourante<instance.getCout().length; heureCourante++) {
+                obj = model.sum(obj, model.prod(instance.getCout()[heureCourante], model.sum(puissanceTurbine[turbineCourante][heureCourante], puissancePompe[turbineCourante][heureCourante])));
             }
         }
-        model.addMaximize(sum, "coutTotal");
 
+        model.addMaximize(obj, "objective");
+        model.exportModel("Data"+File.separator+"lps"+File.separator+"exemple.lp");
 
     }
 
