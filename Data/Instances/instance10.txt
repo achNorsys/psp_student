@@ -21,6 +21,6 @@ H_0_inf : 100.0;
 Delta_H : 500.0;
 
 // Prix horaire de l'electricite en �/MWh
-c_t : [24.603231028536246, 0, 25.328719859181774]
+c_t : [214.0, 25.0, 2.0,2.0]
 // Prix horaire de la regulation en �/MWh
 r_t : [10.0, 10.0, 10.0];
