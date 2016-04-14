@@ -150,12 +150,12 @@ public class Mip {
     private void initContraintesReservoir() throws IloException {
         for(int turbineCourante=0; turbineCourante<instance.getTPs().length; turbineCourante++) {
             model.addEq(hauteurChute[turbineCourante][0], instance.getSup().getH_0() - instance.getInf().getH_0() + instance.getDelta_H());
-            for (int heureCourante = 0; heureCourante < instance.getCout().length - 1; heureCourante++) {
+            for (int heureCourante = 1; heureCourante < instance.getCout().length ; heureCourante++) {
                 Double coef = 2 * 3600 / (instance.getInf().getLargeur() * instance.getInf().getLongueur());
-                IloNumExpr expr = model.prod(puissancePompe[turbineCourante][heureCourante], coef / instance.getTPs()[0].getAlpha_P());
-                expr = model.sum(expr, model.prod(puissanceTurbine[turbineCourante][heureCourante], coef / instance.getTPs()[0].getAlpha_T()));
+                IloNumExpr expr = model.prod(puissancePompe[turbineCourante][heureCourante-1], coef / instance.getTPs()[0].getAlpha_P());
+                expr = model.sum(expr, model.prod(puissanceTurbine[turbineCourante][heureCourante-1], coef / instance.getTPs()[0].getAlpha_T()));
 
-                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante], hauteurChute[turbineCourante][heureCourante + 1]), expr);
+                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante-1], hauteurChute[turbineCourante][heureCourante]), expr);
             }
         }
     }
