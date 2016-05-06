@@ -51,15 +51,16 @@ public class Mip {
                         System.out.println(" - ModePompe "+model.getValue(modePompe[turbineCourante][heureCourante]));
                         System.out.println(" - ModeTurbine " + model.getValue(modeTurbine[turbineCourante][heureCourante]));
 
-//                    System.out.println(" - puissanceTurbine" + model.getValue(puissanceTurbine[turbineCourante][heureCourante]));
-//                    System.out.println(" - puissancePompe" + model.getValue(puissancePompe[turbineCourante][heureCourante]));
-//                    System.out.println(" - hauteurChute" + model.getValue(hauteurChute[turbineCourante][heureCourante]));
+                    System.out.println(" - puissanceTurbine" + model.getValue(puissanceTurbine[turbineCourante][heureCourante]));
+                    System.out.println(" - puissancePompe" + model.getValue(puissancePompe[turbineCourante][heureCourante]));
+                    System.out.println(" - hauteurChute" + model.getValue(hauteurChute[turbineCourante][heureCourante]));
+                    System.out.println("----------------------------------------------------------------");
                 }
 
             }
             for (int turbineCourante = 0; turbineCourante < instance.getTPs().length; turbineCourante++) {
                 System.out.println("Machine numéro = : " + turbineCourante + "");
-                for (int heureCourante = 1; heureCourante < instance.getCout().length; heureCourante++) {
+                for (int heureCourante = 0; heureCourante < instance.getCout().length; heureCourante++) {
                     System.out.println("--------------------heure " + heureCourante + "------------------------");
 //                    if (model.getValue(stateAtoP[turbineCourante][heureCourante]) == 1.0) {
 //                        System.out.println(" - passage de A ver P");
@@ -164,13 +165,13 @@ public class Mip {
         for (int turbineCourante = 0; turbineCourante < instance.getTPs().length; turbineCourante++) {
             for (int heureCourante = 0; heureCourante < instance.getCout().length; heureCourante++) {
                 model.addLe(model.sum(modePompe[turbineCourante][heureCourante], modeTurbine[turbineCourante][heureCourante]), 1, "contrainteMode" + turbineCourante + "_" + heureCourante);
-                model.addLe(puissanceTurbine[turbineCourante][heureCourante], model.prod(modeTurbine[turbineCourante][heureCourante], instance.getTPs()[0].getP_T_max()),
+                model.addLe(puissanceTurbine[turbineCourante][heureCourante], model.prod(modeTurbine[turbineCourante][heureCourante], instance.getTPs()[turbineCourante].getP_T_max()),
                         "contraintePuissanceTurbine" + turbineCourante + "_" + heureCourante);
-                model.addGe(puissanceTurbine[turbineCourante][heureCourante], model.prod(modeTurbine[turbineCourante][heureCourante], instance.getTPs()[0].getP_T_min()),
+                model.addGe(puissanceTurbine[turbineCourante][heureCourante], model.prod(modeTurbine[turbineCourante][heureCourante], instance.getTPs()[turbineCourante].getP_T_min()),
                         "contraintePuissanceTurbine" + turbineCourante + "_" + heureCourante);
-                model.addLe(puissancePompe[turbineCourante][heureCourante], model.prod(modePompe[turbineCourante][heureCourante], instance.getTPs()[0].getP_P_min()),
+                model.addLe(puissancePompe[turbineCourante][heureCourante], model.prod(modePompe[turbineCourante][heureCourante], instance.getTPs()[turbineCourante].getP_P_min()),
                         "contraintePuissancePompe" + turbineCourante + "_" + heureCourante);
-                model.addGe(puissancePompe[turbineCourante][heureCourante], model.prod(modePompe[turbineCourante][heureCourante], instance.getTPs()[0].getP_P_max()),
+                model.addGe(puissancePompe[turbineCourante][heureCourante], model.prod(modePompe[turbineCourante][heureCourante], instance.getTPs()[turbineCourante].getP_P_max()),
                         "contraintePuissancePompe" + turbineCourante + "_" + heureCourante);
             }
         }
@@ -182,11 +183,11 @@ public class Mip {
     private void initContraintesReservoir() throws IloException {
         for (int turbineCourante = 0; turbineCourante < instance.getTPs().length; turbineCourante++) {
             model.addEq(hauteurChute[turbineCourante][0], instance.getSup().getH_0() - instance.getInf().getH_0() + instance.getDelta_H());
-            for (int heureCourante = 1; heureCourante < instance.getCout().length; heureCourante++) {
-                double coef = 2.0 * 3600.0 / (instance.getInf().getLargeur() * instance.getInf().getLongueur());
-                IloNumExpr expr = model.prod(puissanceTurbine[turbineCourante][heureCourante], coef / instance.getTPs()[0].getAlpha_P());
-                expr = model.sum(expr, model.prod(puissancePompe[turbineCourante][heureCourante], coef / instance.getTPs()[0].getAlpha_T()));
-                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante - 1], hauteurChute[turbineCourante][heureCourante]), expr);
+            for (int heureCourante = 0; heureCourante < instance.getCout().length-1; heureCourante++) {
+                double coef = (2.0 * 3600.0) / (instance.getInf().getLargeur() * instance.getInf().getLongueur());
+                IloNumExpr expr = model.prod(puissanceTurbine[turbineCourante][heureCourante+1], coef / instance.getTPs()[turbineCourante].getAlpha_P());
+                expr = model.sum(expr, model.prod(puissancePompe[turbineCourante][heureCourante+1], coef / instance.getTPs()[turbineCourante].getAlpha_T()));
+                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante], hauteurChute[turbineCourante][heureCourante+1]), expr);
             }
         }
     }
@@ -195,7 +196,14 @@ public class Mip {
      * Fonction initialisant les couts de changement de fonctionnement
      */
     private void initCoutChangementFonction() throws IloException {
+
         for (int i = 0; i < instance.getTPs().length; i++) {
+            IloNumExpr initAp = model.prod(modePompe[i][0], instance.getTPs()[i].getC_AP());
+            model.addEq(coutAtoP[i][0], initAp);
+            IloNumExpr initAt = model.prod(modeTurbine[i][0], instance.getTPs()[i].getC_AT());
+            model.addEq(coutAtoT[i][0], initAt);
+            model.addEq(coutPtoA[i][0], 0);
+            model.addEq(coutTtoA[i][0], 0);
             for (int j = 1; j < instance.getCout().length; j++) {
                 IloNumExpr coutAp = arretVersPompe(i, j);
                 IloNumExpr coutPa = pompeVersArret(i, j);
@@ -204,6 +212,7 @@ public class Mip {
                 IloNumExpr coutChangement = model.sum(coutAp, coutPa, coutAt, coutTa);
                 obj = model.sum(obj, coutChangement);
             }
+            obj = model.sum(obj,initAp,initAt);
         }
         System.out.println("Couts de changement de fonctionnement non implementees");
     }
@@ -263,7 +272,7 @@ public class Mip {
     private void initObjective() throws IloException {
 
         for (int turbineCourante = 0; turbineCourante < instance.getTPs().length; turbineCourante++) {
-            for (int heureCourante = 1; heureCourante < instance.getCout().length; heureCourante++) {
+            for (int heureCourante = 0; heureCourante < instance.getCout().length; heureCourante++) {
                 IloNumExpr coutPuissance = model.prod(instance.getCout()[heureCourante], model.sum(puissanceTurbine[turbineCourante][heureCourante], puissancePompe[turbineCourante][heureCourante]));
                 obj = model.sum(obj, coutPuissance);
             }
