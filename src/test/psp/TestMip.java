@@ -11,7 +11,7 @@ import psp.Parser;
 
 public class TestMip {
 	public static void main(String [] args) throws IOException, IloException {
-		Instance instance = Parser.lireInstance("Data"+File.separator+"Instances"+File.separator+"instance10.txt",1);
+		Instance instance = Parser.lireInstance("Data"+File.separator+"Instances"+File.separator+"casLimite.txt",1);
 		Mip mip = new Mip(instance);
 		mip.solve();
 	}
