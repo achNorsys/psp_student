@@ -7,10 +7,10 @@ P_P_min : -150.0;
 P_P_max : -200.0;
 alpha_T : 4.41;
 alpha_P : 5.444444444444445;
-c_AT : 1.0;
-c_TA : 10.0;
-c_AP : 20.0;
-c_PA : 30.0;
+c_AT : -1.0;
+c_TA : -10.0;
+c_AP : -20.0;
+c_PA : -30.0;
 
 // Caracteristique des reservoirs distance en m
 Hauteur : 100.0;
@@ -21,6 +21,6 @@ H_0_inf : 100.0;
 Delta_H : 500.0;
 
 // Prix horaire de l'electricite en �/MWh
-c_t : [0.0, 0.0,0.0,12.0]
+c_t : [0.0, 0.0,0.0,12.0,12.0]
 // Prix horaire de la regulation en �/MWh
 r_t : [10.0, 10.0, 10.0];
