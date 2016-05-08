@@ -9,7 +9,7 @@ import ilog.cplex.IloCplex;
 public class Mip {
 	private Integer modePompeInit = 0;
 	private Integer modeTurbineInit = 0;
-	private Integer HEURE_REFROIDISSEMENT = 2;
+	private Integer heureRefroidissement = 2;
 	public static Instance instance;
 	public static IloCplex model;
 
@@ -287,13 +287,13 @@ public class Mip {
 	 */
 	private void initConstraintsRefroidissmenet() throws IloException {
 		for (int i = 0; i < instance.getTPs().length; i++) {
-			for (int j = 0; j < instance.getCout().length - HEURE_REFROIDISSEMENT; j++) {
+			for (int j = 0; j < instance.getCout().length - heureRefroidissement; j++) {
 				IloIntExpr sum = model.intExpr();
-				for (int k = 0; k < HEURE_REFROIDISSEMENT + 1; k++) {
+				for (int k = 0; k < heureRefroidissement + 1; k++) {
 					IloIntExpr sumMode = model.sum(modePompe[i][j + k], modeTurbine[i][j + k]);
 					sum = model.sum(sum, sumMode);
 				}
-				model.addLe(sum, HEURE_REFROIDISSEMENT);
+				model.addLe(sum, heureRefroidissement);
 			}
 		}
 	}
@@ -365,12 +365,14 @@ public class Mip {
 		modeTurbineInit = mODE_TURBINE_INIT;
 	}
 
-	public Integer getHEURE_REFROIDISSEMENT() {
-		return HEURE_REFROIDISSEMENT;
+	public Integer getHeureRefroidissement() {
+		return heureRefroidissement;
 	}
 
-	public void setHEURE_REFROIDISSEMENT(int hEURE_REFROIDISSEMENT) {
-		HEURE_REFROIDISSEMENT = hEURE_REFROIDISSEMENT;
+	public void setHeureRefroidissement(Integer heureRefroidissement) {
+		this.heureRefroidissement = heureRefroidissement;
 	}
+
+	
 
 }

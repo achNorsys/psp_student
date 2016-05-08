@@ -51,6 +51,7 @@ public class gui {
 	static public JTextField pVa;
 	static public Puissance puissance = new Puissance("0.0", "0.0", "0.0", "0.0", "0.0", "0.0");
 	static public ReservoirGui reservoirGui = new ReservoirGui("100.0", "1000.0", "1000.0", "0.0", "100.0", "500.0");
+	static public JTextField heureColding;
 
 	/**
 	 * Launch the application.
@@ -104,12 +105,12 @@ public class gui {
 		configMachinePanel.setLayout(null);
 
 		JPanel coutChangementPannel = new JPanel();
-		coutChangementPannel.setBounds(17, 183, 227, 119);
+		coutChangementPannel.setBounds(17, 171, 227, 119);
 		configMachinePanel.add(coutChangementPannel);
 		coutChangementPannel.setLayout(null);
 
 		JButton btnRsoudre = new JButton("R\u00E9soudre");
-		btnRsoudre.setBounds(51, 395, 89, 23);
+		btnRsoudre.setBounds(51, 389, 89, 23);
 		btnRsoudre.addActionListener(new SolveListener());
 		frame.getContentPane().add(btnRsoudre);
 		configMachinePanel.add(initMode());
@@ -129,7 +130,7 @@ public class gui {
 		configMachinePanel.add(lblModeInitial);
 
 		SteelCheckBox coutChangement = new SteelCheckBox();
-		coutChangement.setBounds(17, 150, 132, 26);
+		coutChangement.setBounds(17, 138, 132, 26);
 		configMachinePanel.add(coutChangement);
 		coutChangement.setSelected(mip.isCoutChangement());
 		if (mip.isCoutChangement()) {
@@ -141,7 +142,7 @@ public class gui {
 		coutChangement.setColored(true);
 		coutChangement.setText("cout changement");
 		SteelCheckBox refroidissement = new SteelCheckBox();
-		refroidissement.setBounds(17, 121, 123, 26);
+		refroidissement.setBounds(17, 109, 125, 26);
 		configMachinePanel.add(refroidissement);
 
 		refroidissement.setSelected(mip.isRefroidissement());
@@ -189,6 +190,12 @@ public class gui {
 		coutChangementPannel.add(pVa);
 		refroidissement.addMouseListener(new refroidissementListener());
 		coutChangement.addMouseListener(new changementListener(coutChangementPannel));
+		
+		heureColding = new JTextField();
+		heureColding.setText("2");
+		heureColding.setColumns(10);
+		heureColding.setBounds(146, 112, 47, 20);
+		configMachinePanel.add(heureColding);
 
 		tableau = new JTable(modele);
 		tableau.setVisible(true);
@@ -200,11 +207,11 @@ public class gui {
 		frame.getContentPane().add(coutPanel);
 
 		JButton ajouter = new JButton(new AddAction());
-		ajouter.setBounds(511, 395, 89, 23);
+		ajouter.setBounds(511, 389, 118, 23);
 		frame.getContentPane().add(ajouter);
 
 		JButton supprimer = new JButton(new RemoveAction());
-		supprimer.setBounds(412, 395, 89, 23);
+		supprimer.setBounds(382, 389, 119, 23);
 		frame.getContentPane().add(supprimer);
 
 		JMenuBar menuBar = new JMenuBar();
