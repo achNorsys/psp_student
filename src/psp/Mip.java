@@ -8,6 +8,9 @@ import ilog.concert.*;
 import ilog.cplex.IloCplex;
 
 public class Mip {
+    public static final int MODE_POMPE_INIT = 0;
+    public static final int MODE_TURBINE_INIT = 0;
+    public static final int HEURE_REFROIDISSEMENT = 2;
     private Instance instance;
     private IloCplex model;
 
@@ -48,8 +51,8 @@ public class Mip {
             for (int turbineCourante = 0; turbineCourante < instance.getTPs().length; turbineCourante++) {
                 System.out.println("Machine numéro = : " + turbineCourante + "");
                 for (int heureCourante = 0; heureCourante < instance.getCout().length; heureCourante++) {
-                        System.out.println(" - ModePompe "+model.getValue(modePompe[turbineCourante][heureCourante]));
-                        System.out.println(" - ModeTurbine " + model.getValue(modeTurbine[turbineCourante][heureCourante]));
+                    System.out.println(" - ModePompe " + model.getValue(modePompe[turbineCourante][heureCourante]));
+                    System.out.println(" - ModeTurbine " + model.getValue(modeTurbine[turbineCourante][heureCourante]));
 
                     System.out.println(" - puissanceTurbine" + model.getValue(puissanceTurbine[turbineCourante][heureCourante]));
                     System.out.println(" - puissancePompe" + model.getValue(puissancePompe[turbineCourante][heureCourante]));
@@ -183,11 +186,13 @@ public class Mip {
     private void initContraintesReservoir() throws IloException {
         for (int turbineCourante = 0; turbineCourante < instance.getTPs().length; turbineCourante++) {
             model.addEq(hauteurChute[turbineCourante][0], instance.getSup().getH_0() - instance.getInf().getH_0() + instance.getDelta_H());
-            for (int heureCourante = 0; heureCourante < instance.getCout().length-1; heureCourante++) {
+            model.addEq(modePompe[turbineCourante][0], MODE_TURBINE_INIT);
+            model.addEq(modeTurbine[turbineCourante][0], MODE_POMPE_INIT);
+            for (int heureCourante = 0; heureCourante < instance.getCout().length - 1; heureCourante++) {
                 double coef = (2.0 * 3600.0) / (instance.getInf().getLargeur() * instance.getInf().getLongueur());
-                IloNumExpr expr = model.prod(puissanceTurbine[turbineCourante][heureCourante+1], coef / instance.getTPs()[turbineCourante].getAlpha_P());
-                expr = model.sum(expr, model.prod(puissancePompe[turbineCourante][heureCourante+1], coef / instance.getTPs()[turbineCourante].getAlpha_T()));
-                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante], hauteurChute[turbineCourante][heureCourante+1]), expr);
+                IloNumExpr expr = model.prod(puissanceTurbine[turbineCourante][heureCourante + 1], coef / instance.getTPs()[turbineCourante].getAlpha_P());
+                expr = model.sum(expr, model.prod(puissancePompe[turbineCourante][heureCourante + 1], coef / instance.getTPs()[turbineCourante].getAlpha_T()));
+                model.addEq(model.diff(hauteurChute[turbineCourante][heureCourante], hauteurChute[turbineCourante][heureCourante + 1]), expr);
             }
         }
     }
@@ -212,7 +217,7 @@ public class Mip {
                 IloNumExpr coutChangement = model.sum(coutAp, coutPa, coutAt, coutTa);
                 obj = model.sum(obj, coutChangement);
             }
-            obj = model.sum(obj,initAp,initAt);
+            //obj = model.sum(obj,initAp,initAt);
         }
         System.out.println("Couts de changement de fonctionnement non implementees");
     }
@@ -254,8 +259,16 @@ public class Mip {
      * Fonction initialisant les contraintes de refroidissement
      */
     private void initConstraintsRefroidissmenet() throws IloException {
-        // TODO à vous de jouer
-        System.out.println("Contraintes de refroidissement non implementees");
+        for (int i = 0; i < instance.getTPs().length; i++) {
+            for (int j = 0; j < instance.getCout().length-HEURE_REFROIDISSEMENT; j++) {
+                IloIntExpr sum = model.intExpr();
+                for (int k = 0; k < HEURE_REFROIDISSEMENT+1; k++) {
+                    IloIntExpr sumMode = model.sum(modePompe[i][j + k], modeTurbine[i][j + k]);
+                    sum = model.sum(sum,sumMode);
+                }
+                model.addLe(sum,HEURE_REFROIDISSEMENT);
+            }
+        }
     }
 
     /**
