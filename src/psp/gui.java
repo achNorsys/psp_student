@@ -52,6 +52,7 @@ public class gui {
 	static public Puissance puissance = new Puissance("0.0", "0.0", "0.0", "0.0", "0.0", "0.0");
 	static public ReservoirGui reservoirGui = new ReservoirGui("100.0", "1000.0", "1000.0", "0.0", "100.0", "500.0");
 	static public JTextField heureColding;
+	static public JTextField coutAmmortissement;
 
 	/**
 	 * Launch the application.
@@ -105,7 +106,7 @@ public class gui {
 		configMachinePanel.setLayout(null);
 
 		JPanel coutChangementPannel = new JPanel();
-		coutChangementPannel.setBounds(17, 171, 227, 119);
+		coutChangementPannel.setBounds(17, 186, 227, 119);
 		configMachinePanel.add(coutChangementPannel);
 		coutChangementPannel.setLayout(null);
 
@@ -130,7 +131,7 @@ public class gui {
 		configMachinePanel.add(lblModeInitial);
 
 		SteelCheckBox coutChangement = new SteelCheckBox();
-		coutChangement.setBounds(17, 138, 132, 26);
+		coutChangement.setBounds(17, 153, 132, 26);
 		configMachinePanel.add(coutChangement);
 		coutChangement.setSelected(mip.isCoutChangement());
 		if (mip.isCoutChangement()) {
@@ -142,7 +143,7 @@ public class gui {
 		coutChangement.setColored(true);
 		coutChangement.setText("cout changement");
 		SteelCheckBox refroidissement = new SteelCheckBox();
-		refroidissement.setBounds(17, 109, 125, 26);
+		refroidissement.setBounds(17, 124, 125, 26);
 		configMachinePanel.add(refroidissement);
 
 		refroidissement.setSelected(mip.isRefroidissement());
@@ -194,8 +195,23 @@ public class gui {
 		heureColding = new JTextField();
 		heureColding.setText("2");
 		heureColding.setColumns(10);
-		heureColding.setBounds(146, 112, 47, 20);
+		heureColding.setBounds(175, 127, 57, 20);
 		configMachinePanel.add(heureColding);
+		
+		coutAmmortissement = new JTextField();
+		coutAmmortissement.setText("-430000");
+		coutAmmortissement.setColumns(10);
+		coutAmmortissement.setBounds(175, 99, 57, 20);
+		configMachinePanel.add(coutAmmortissement);
+		
+		SteelCheckBox stlchckbxCoutAmmortissement = new SteelCheckBox();
+		stlchckbxCoutAmmortissement.setText("cout ammortissement");
+		stlchckbxCoutAmmortissement.setSelectedColor(ColorDef.GREEN);
+		stlchckbxCoutAmmortissement.setSelected(mip.isAmmortissement());
+		stlchckbxCoutAmmortissement.setColored(true);
+		stlchckbxCoutAmmortissement.setBounds(17, 96, 152, 26);
+		stlchckbxCoutAmmortissement.addMouseListener(new ChangementCoutAmmortissement());
+		configMachinePanel.add(stlchckbxCoutAmmortissement);
 
 		tableau = new JTable(modele);
 		tableau.setVisible(true);

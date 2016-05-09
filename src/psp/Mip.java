@@ -10,12 +10,15 @@ public class Mip {
 	private Integer modePompeInit = 0;
 	private Integer modeTurbineInit = 0;
 	private Integer heureRefroidissement = 2;
+	private Integer nbTurbine = 1;
 	public static Instance instance;
 	public static IloCplex model;
 
 	private boolean coutChangement = true;
 	private boolean refroidissement = true;
+	private boolean ammortissement = true;
 	private boolean regulation = false;
+	private Integer coutAmmortissement = 430000;
 
 	public static IloIntVar[][] modeTurbine;
 	public static IloIntVar[][] modePompe;
@@ -318,6 +321,9 @@ public class Mip {
 								puissancePompe[turbineCourante][heureCourante]));
 				obj = model.sum(obj, coutPuissance);
 			}
+			if(ammortissement){
+				obj=model.sum(obj,nbTurbine* coutAmmortissement);
+			}
 		}
 
 		model.addMaximize(obj, "objective");
@@ -371,6 +377,30 @@ public class Mip {
 
 	public void setHeureRefroidissement(Integer heureRefroidissement) {
 		this.heureRefroidissement = heureRefroidissement;
+	}
+
+	public Integer getNbTurbine() {
+		return nbTurbine;
+	}
+
+	public void setNbTurbine(Integer nbTurbine) {
+		this.nbTurbine = nbTurbine;
+	}
+
+	public boolean isAmmortissement() {
+		return ammortissement;
+	}
+
+	public void setAmmortissement(boolean ammortissement) {
+		this.ammortissement = ammortissement;
+	}
+
+	public Integer getCoutAmmortissement() {
+		return coutAmmortissement;
+	}
+
+	public void setCoutAmmortissement(Integer coutAmmortissement) {
+		this.coutAmmortissement = coutAmmortissement;
 	}
 
 	

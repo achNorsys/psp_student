@@ -28,6 +28,10 @@ public class SolveListener implements ActionListener {
 			writeConfig(path);
 			try {
 				Instance instance = Parser.lireInstance(path, Integer.parseInt(gui.nbTurbine.getText()));
+				gui.mip.setNbTurbine(Integer.parseInt(gui.nbTurbine.getText()));
+				if (gui.mip.isAmmortissement()) {
+					gui.mip.setCoutAmmortissement(Integer.parseInt(gui.coutAmmortissement.getText()));
+				}
 				gui.mip.instance = instance;
 				if (gui.mip.isRefroidissement()) {
 					gui.mip.setHeureRefroidissement(Integer.parseInt(gui.heureColding.getText()));
